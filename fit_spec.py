@@ -5,7 +5,8 @@ from astropy import units as u
 import pyspeckit
 import pylab
 import matplotlib.pyplot as plt
-
+from astropy.io import fits
+import sys
 
 #def read_fits(Filename):
 '''
@@ -47,7 +48,7 @@ plt_lin = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
                [r'Pa$\epsilon$',9545],#9546.2
                ['NaI',22080]]
 
-hdulist = fits.open('Filename.fits') # Opens fits file
+hdulist = fits.open(sys.argv[1]) # Opens fits file
 data= hdulist[0].data # This is the flux
 
 # Following lines look at header and extract the wavelength information
