@@ -99,22 +99,22 @@ spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
 
 
 for line in range(0,len(plt_lin)):
-  lin_name = plt_lin[line][0]
-  lin_value = plt_lin[line][1]*u.AA
-  lin_value = lin_value.to(u.micron).value #Converting plt_lin units to microns
-  base_min = lin_value-.03
-  base_max = lin_value+.03
-  lin_min = lin_value-.01
-  lin_max = lin_value+.01
-  # print(lin_name, lin_value)
+  line_name = plt_lin[line][0]
+  line_value = plt_lin[line][1]*u.AA
+  line_value = line_value.to(u.micron).value #Converting plt_lin units to microns
+  base_min = line_value-.03
+  base_max = line_value+.03
+  lin_min = line_value-.01
+  lin_max = line_value+.01
+  # print(line_name, line_value)
   # print('Baseline Range:', base_min, base_max)
   # print('Line Widith:', lin_min, lin_max)
-  if (lin_value > x_min) & (lin_value < x_max): # Plotting my lines on the graph
-    plt.axvline(lin_value,color='b',linestyle='--')
+  if (line_value > x_min) & (line_value < x_max): # Plotting my lines on the graph
+    plt.axvline(line_value,color='b',linestyle='--')
     lbl_pos = (y_max-y_min)*0.85 # at 85% up plot
-    plt.text(lin_value,lbl_pos,lin_name,rotation=45) 
-    plt.axvline(lin_value,color='b',linestyle='--')
-    plt.text(lin_value,lbl_pos,lin_name,rotation=45)
+    plt.text(line_value,lbl_pos,line_name,rotation=45) 
+    plt.axvline(line_value,color='b',linestyle='--')
+    plt.text(line_value,lbl_pos,line_name,rotation=45)
 
 pylab.show()
 
