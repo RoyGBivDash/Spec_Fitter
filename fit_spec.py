@@ -69,26 +69,26 @@ flux_values = flux.value # Just the numbers
 wv_unit = u.AA
 wavelength = wavelength * wv_unit
 wavelength = wavelength.to(u.micron) # Converting Angstrom to microns
-wv_values = wavelength.value # Just the numbers, in microns
+wave_values = wavelength.value # Just the numbers, in microns
 
 # print('Object name:', gal_name)
 # print('Flux:', flux_prime * flux_unit)
 # print('Wavelength:', wavelength)
 
 # Create whole spectreum
-spec = pyspeckit.Spectrum(data=flux_values, xarr=wv_values, header=header, unit='erg/s/cm^2/AA')
+spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values, header=header, unit='erg/s/cm^2/AA')
 
 
-x_min = wv_values[0] - .01
-x_max = wv_values[-1] + .01
+x_min = wave_values[0] - .01
+x_max = wave_values[-1] + .01
 #Look at last fifth of spectrum, excluding last 50 elements, and gets min flux value for whole spectrum plot
-fifth = np.floor(len(wv_values)*.2)
+fifth = np.floor(len(wave_values)*.2)
 y_min = np.min(flux_values[-fifth:-50]) - .1
 #Look at first fourth of spectrum and gets max flux value for whole spectrum plot
-fourth = np.floor(len(wv_values)*.25) 
+fourth = np.floor(len(wave_values)*.25) 
 y_max = np.max(flux_values[0:fourth]) + .2
 
-# print(wv_values[0:fourth])
+# print(wave_values[0:fourth])
 # print('x-range:', x_min, x_max)
 # print('y-range:', y_min, y_max)
 
