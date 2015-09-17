@@ -49,7 +49,7 @@ plt_lin = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
                ['NaI',22080]]
 
 hdulist = fits.open(sys.argv[1]) # Opens fits file
-data= hdulist[0].data # This is the flux
+data = hdulist[0].data # This is the flux
 
 # Following lines look at header and extract the wavelength information
 header = hdulist[0].header
@@ -103,13 +103,13 @@ for line in range(0,len(plt_lin)):
   lin_name = plt_lin[line][0]
   lin_value = plt_lin[line][1]*u.AA
   lin_value = lin_value.to(u.micron).value #Converting plt_lin units to microns
-  base_min = lin_value-.04
-  base_max = lin_value+.04
+  base_min = lin_value-.03
+  base_max = lin_value+.03
   lin_min = lin_value-.01
   lin_max = lin_value+.01
-  print(lin_name, lin_value)
-  print('Baseline Range:', base_min, base_max)
-  print('Line Widith:', lin_min, lin_max)
+  # print(lin_name, lin_value)
+  # print('Baseline Range:', base_min, base_max)
+  # print('Line Widith:', lin_min, lin_max)
   # spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) # Plot only baseline range, not working
   if (lin_value > x_min) & (lin_value < x_max): # Plotting my lines on the graph
     plt.axvline(lin_value,color='b',linestyle='--')
@@ -117,12 +117,20 @@ for line in range(0,len(plt_lin)):
     plt.text(lin_value,lbl_pos,lin_name,rotation=45) 
     plt.axvline(lin_value,color='b',linestyle='--')
     plt.text(lin_value,lbl_pos,lin_name,rotation=45)
+    # plt.axvline(base_min, color='r') # Want these for when plotting only one line at a time
+    # plt.axvline(base_max, color='r')
+    # plt.axvline(lin_min, color='g')
+    # plt.axvline(lin_max, color='g')
 
 pylab.show()
+
+#saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
+plt.savefig('../Images/' + gal_name + '.eps', format='eps', dpi=1200) 
 
 # *********************************
 # Nothing below here works but should be the bulk of this script
 # *********************************
+# print(spec.specfit.parinfo)
 
 # Fit a first order polynomial for the continuum non-interactively
 # spec.baseline(clear_all_connections=True, order=1, highlight_fitregion=True, reset_selection=True, exclude=(lin_min,lin_max), plot_baseline=True, linewidth=2,baseline_fit_color='r',fit_plotted_area=True, fit_original=True)
