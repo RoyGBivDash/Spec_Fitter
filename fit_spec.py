@@ -93,7 +93,9 @@ y_max = np.max(flux_values[0:fourth]) + .2
 # print('y-range:', y_min, y_max)
 
 # Plot whole spectrum 
-spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max) 
+#spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max) 
+#import pdb
+#pdb.set_trace()
 # Enter baseline fitter by pressing 'b', '1' around basline area, '3' to plot baseline
 # Enter line fit by pressing 'f', '1'at each end of line, '2' at peak then at FWHM, '3' to fit
 
@@ -110,16 +112,16 @@ for line in range(0,len(reference_wavelengths)):
   # print('Baseline Range:', base_min, base_max)
   # print('Line Widith:', lin_min, lin_max)
   if (line_value > x_min) & (line_value < x_max): # Plotting my lines on the graph
+    new_spec = spec.copy()
+    new_spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) 
     plt.axvline(line_value,color='b',linestyle='--')
     lbl_pos = (y_max-y_min)*0.85 # at 85% up plot
     plt.text(line_value,lbl_pos,line_name,rotation=45) 
     plt.axvline(line_value,color='b',linestyle='--')
     plt.text(line_value,lbl_pos,line_name,rotation=45)
-
-pylab.show()
-
-#saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
-plt.savefig('../Images/' + gal_name + '.eps', format='eps', dpi=1200) 
+    pylab.show()
+    #saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
+    plt.savefig('../Images/' + gal_name + '_' + line_name + '.eps', format='eps', dpi=1200) 
 
 
 
