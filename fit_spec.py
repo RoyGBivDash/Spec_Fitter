@@ -19,7 +19,7 @@ File and information must be saved manually at this time.
 Flux: assigned unit of erg/s/cm^2/Angstrom
 Wavelength: Input should be in angstroms, converts angstroms to microns, plots in microns
 '''
-plt_lin = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
+reference_wavelengths = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
                ['OI',11287],#*
                ['[OII] 7319',7319.0],
                ['[SII] 6718',6718.95],
@@ -55,8 +55,8 @@ header = hdulist[0].header
 gal_name = header['OBJECT']
 wcs = WCS(header)
 index = np.arange(header['NAXIS1']) # Make index array
-wavelength = wcs.wcs_pix2world(index[:,np.newaxis], 0)
-wavelength = wavelength.flatten() # Makes sure the wavelength has correct dimensions
+wavelengths = wcs.wcs_pix2world(index[:,np.newaxis], 0)
+wavelengths = wavelengths.flatten() # Makes sure the wavelength has correct dimensions
 
 hdulist.close()
 
@@ -67,13 +67,13 @@ flux_values = flux.value # Just the numbers
 
 #Giving units to wavelength and converting to microns
 wv_unit = u.AA
-wavelength = wavelength * wv_unit
-wavelength = wavelength.to(u.micron) # Converting Angstrom to microns
-wave_values = wavelength.value # Just the numbers, in microns
+wavelengths = wavelengths * wv_unit
+wavelengths = wavelengths.to(u.micron) # Converting Angstrom to microns
+wave_values = wavelengths.value # Just the numbers, in microns
 
 # print('Object name:', gal_name)
 # print('Flux:', flux_prime * flux_unit)
-# print('Wavelength:', wavelength)
+# print('wavelengths:', wavelengths)
 
 # Create whole spectreum
 spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values, header=header, unit='erg/s/cm^2/AA')
@@ -98,10 +98,10 @@ spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
 # Enter line fit by pressing 'f', '1'at each end of line, '2' at peak then at FWHM, '3' to fit
 
 
-for line in range(0,len(plt_lin)):
-  line_name = plt_lin[line][0]
-  line_value = plt_lin[line][1]*u.AA
-  line_value = line_value.to(u.micron).value #Converting plt_lin units to microns
+for line in range(0,len(reference_wavelengths)):
+  line_name = reference_wavelengths[line][0]
+  line_value = reference_wavelengths[line][1]*u.AA
+  line_value = line_value.to(u.micron).value #Converting reference_wavelengths units to microns
   base_min = line_value-.03
   base_max = line_value+.03
   lin_min = line_value-.01
