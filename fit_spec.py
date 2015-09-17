@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import sys
 
-#def read_fits(Filename):
 '''
 This function reads the given fits file and converts the datafrom angstroms to microns.
 
@@ -110,37 +109,18 @@ for line in range(0,len(plt_lin)):
   # print(lin_name, lin_value)
   # print('Baseline Range:', base_min, base_max)
   # print('Line Widith:', lin_min, lin_max)
-  # spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) # Plot only baseline range, not working
   if (lin_value > x_min) & (lin_value < x_max): # Plotting my lines on the graph
     plt.axvline(lin_value,color='b',linestyle='--')
     lbl_pos = (y_max-y_min)*0.85 # at 85% up plot
     plt.text(lin_value,lbl_pos,lin_name,rotation=45) 
     plt.axvline(lin_value,color='b',linestyle='--')
     plt.text(lin_value,lbl_pos,lin_name,rotation=45)
-    # plt.axvline(base_min, color='r') # Want these for when plotting only one line at a time
-    # plt.axvline(base_max, color='r')
-    # plt.axvline(lin_min, color='g')
-    # plt.axvline(lin_max, color='g')
 
 pylab.show()
 
 #saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
 plt.savefig('../Images/' + gal_name + '.eps', format='eps', dpi=1200) 
 
-# *********************************
-# Nothing below here works but should be the bulk of this script
-# *********************************
-# print(spec.specfit.parinfo)
-
-# Fit a first order polynomial for the continuum non-interactively
-# spec.baseline(clear_all_connections=True, order=1, highlight_fitregion=True, reset_selection=True, exclude=(lin_min,lin_max), plot_baseline=True, linewidth=2,baseline_fit_color='r',fit_plotted_area=True, fit_original=True)
-
-#Fit gaussians to the spectral lines non-interactively, needs to be done AFTER contin fit.
-# amplitude_guess = lin_value.value
-# center_guess = lin_value.value
-# width_guess = lin_max - lin_min
-# guesses = [amplitude_guess, center_guess, width_guess]
-# spec.specfit(guesses=guesses, fittype='gaussian', plot=True, continuum_as_baseline=True, components=True, x_min=lin_min, x_max=lin_max, xunits='microns', midpt_location='plt-center')
 
 
 
