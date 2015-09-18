@@ -108,6 +108,8 @@ for line in range(0,len(reference_wavelengths)):
   base_max = line_value+.03
   lin_min = line_value-.01
   lin_max = line_value+.01
+  #peak_guess = np.max(flux_values[lin_min:lin_max]) #Not working, not sure why, looks the same as above
+  #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
   # print(line_name, line_value)
   # print('Baseline Range:', base_min, base_max)
   # print('Line Widith:', lin_min, lin_max)
