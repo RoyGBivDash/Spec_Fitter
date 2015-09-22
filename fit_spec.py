@@ -106,13 +106,13 @@ for line in range(0,len(reference_wavelengths)):
   line_value = line_value.to(u.micron).value #Converting reference_wavelengths units to microns
   base_min = line_value-.03
   base_max = line_value+.03
-  lin_min = line_value-.01
-  lin_max = line_value+.01
-  #peak_guess = np.max(flux_values[lin_min:lin_max]) #Not working, not sure why, looks the same as above
+  line_min = line_value-.01
+  line_max = line_value+.01
+  #peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
   #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
   # print(line_name, line_value)
   # print('Baseline Range:', base_min, base_max)
-  # print('Line Widith:', lin_min, lin_max)
+  # print('Line Widith:', line_min, line_max)
   if (line_value > x_min) & (line_value < x_max): # Plotting my lines on the graph
     new_spec = spec.copy()
     new_spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) 
