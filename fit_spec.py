@@ -8,18 +8,24 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import sys
 
-'''
-This function reads the given fits file and converts the datafrom angstroms to microns.
+def get_flux_values(data):
+    flux_unit = u.erg / (u.cm**2 * u.s * u.AA)
+    flux = data * flux_unit * 1e16 # Need larger numbers for pyspeckit.Spectrum to be able to read
+    flux_values = flux.value # Just the numbers
+    return flux_values
 
-Input: directory/to/fitsfile.fits
-Output: Simple plot of flux vs wavelength. Interactive mode can be entered by pressing 'b' for baseline,
-and following command prompt. Press 'f' for line fitting, this must be done AFTER baseline, follow command prompt.
-File and information must be saved manually at this time.
-
-Flux: assigned unit of erg/s/cm^2/Angstrom
-Wavelength: Input should be in angstroms, converts angstroms to microns, plots in microns
-'''
 def main():
+    '''
+    This function reads the given fits file and converts the datafrom angstroms to microns.
+
+    Input: directory/to/fitsfile.fits
+    Output: Simple plot of flux vs wavelength. Interactive mode can be entered by pressing 'b' for baseline,
+    and following command prompt. Press 'f' for line fitting, this must be done AFTER baseline, follow command prompt.
+    File and information must be saved manually at this time.
+
+    Flux: assigned unit of erg/s/cm^2/Angstrom
+    Wavelength: Input should be in angstroms, converts angstroms to microns, plots in microns
+    '''
     reference_wavelengths = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
                    ['OI',11287],#*
                    ['[OII] 7319',7319.0],
@@ -62,9 +68,7 @@ def main():
     hdulist.close()
 
     # Giving units to flux
-    flux_unit = u.erg / (u.cm**2 * u.s * u.AA)
-    flux = data * flux_unit * 1e16 # Need larger numbers for pyspeckit.Spectrum to be able to read
-    flux_values = flux.value # Just the numbers
+    flux_values = get_flux_values(data)
 
     #Giving units to wavelength and converting to microns
     wv_unit = u.AA
