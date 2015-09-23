@@ -8,13 +8,29 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 import sys
 
+def read_fits(filename):
+    """Read FITS file and return data, header, galaxy name and wavelengths"""
+    hdulist = fits.open(filename) # Opens fits file
+    data = hdulist[0].data # This is the flux
+    # Following lines look at header and extract the wavelength information
+    header = hdulist[0].header
+    gal_name = header['OBJECT']
+    wcs = WCS(header)
+    index = np.arange(header['NAXIS1']) # Make index array
+    wavelengths = wcs.wcs_pix2world(index[:,np.newaxis], 0)
+    wavelengths = wavelengths.flatten() # Makes sure the wavelength has correct dimensions
+    hdulist.close()
+    return data, header, gal_name, wavelengths
+
 def get_flux_values(data):
+    """Extract flux values from FITS data; return unitless values"""
     flux_unit = u.erg / (u.cm**2 * u.s * u.AA)
     flux = data * flux_unit * 1e16 # Need larger numbers for pyspeckit.Spectrum to be able to read
     flux_values = flux.value # Just the numbers
     return flux_values
 
 def get_wave_values(wavelengths):
+    """Convert wavelength units to microns, return values only"""
     wv_unit = u.AA
     wavelengths = wavelengths * wv_unit
     wavelengths = wavelengths.to(u.micron) # Converting Angstrom to microns
@@ -61,28 +77,12 @@ def main():
                    [r'Pa$\epsilon$',9545],#9546.2
                    ['NaI',22080]]
 
-    hdulist = fits.open(sys.argv[1]) # Opens fits file
-    data = hdulist[0].data # This is the flux
-
-    # Following lines look at header and extract the wavelength information
-    header = hdulist[0].header
-    gal_name = header['OBJECT']
-    wcs = WCS(header)
-    index = np.arange(header['NAXIS1']) # Make index array
-    wavelengths = wcs.wcs_pix2world(index[:,np.newaxis], 0)
-    wavelengths = wavelengths.flatten() # Makes sure the wavelength has correct dimensions
-
-    hdulist.close()
-
+    data, header, gal_name, wavelengths = read_fits(sys.argv[1])
     # Giving units to flux
     flux_values = get_flux_values(data)
 
     #Giving units to wavelength and converting to microns
     wave_values = get_wave_values(wavelengths)
-
-    # print('Object name:', gal_name)
-    # print('Flux:', flux_prime * flux_unit)
-    # print('wavelengths:', wavelengths)
 
     # Create whole spectreum
     spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values, header=header, unit='erg/s/cm^2/AA')
@@ -97,18 +97,9 @@ def main():
     fourth = np.floor(len(wave_values)*.25) 
     y_max = np.max(flux_values[0:fourth]) + .2
 
-    # print(wave_values[0:fourth])
-    # print('x-range:', x_min, x_max)
-    # print('y-range:', y_min, y_max)
-
     # Plot whole spectrum 
-    #spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max) 
-    #import pdb
-    #pdb.set_trace()
     # Enter baseline fitter by pressing 'b', '1' around basline area, '3' to plot baseline
     # Enter line fit by pressing 'f', '1'at each end of line, '2' at peak then at FWHM, '3' to fit
-
-
     for line in range(0,len(reference_wavelengths)):
       line_name = reference_wavelengths[line][0]
       line_value = reference_wavelengths[line][1]*u.AA
@@ -119,9 +110,6 @@ def main():
       line_max = line_value+.01
       #peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
       #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
-      # print(line_name, line_value)
-      # print('Baseline Range:', base_min, base_max)
-      # print('Line Widith:', line_min, line_max)
       if (line_value > x_min) & (line_value < x_max): # Plotting my lines on the graph
         new_spec = spec.copy()
         new_spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) 
