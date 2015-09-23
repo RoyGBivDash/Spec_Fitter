@@ -14,6 +14,13 @@ def get_flux_values(data):
     flux_values = flux.value # Just the numbers
     return flux_values
 
+def get_wave_values(wavelengths):
+    wv_unit = u.AA
+    wavelengths = wavelengths * wv_unit
+    wavelengths = wavelengths.to(u.micron) # Converting Angstrom to microns
+    wave_values = wavelengths.value # Just the numbers, in microns
+    return wave_values
+
 def main():
     '''
     This function reads the given fits file and converts the datafrom angstroms to microns.
@@ -71,10 +78,7 @@ def main():
     flux_values = get_flux_values(data)
 
     #Giving units to wavelength and converting to microns
-    wv_unit = u.AA
-    wavelengths = wavelengths * wv_unit
-    wavelengths = wavelengths.to(u.micron) # Converting Angstrom to microns
-    wave_values = wavelengths.value # Just the numbers, in microns
+    wave_values = get_wave_values(wavelengths)
 
     # print('Object name:', gal_name)
     # print('Flux:', flux_prime * flux_unit)
