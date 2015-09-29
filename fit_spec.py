@@ -1,3 +1,5 @@
+import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.wcs import WCS
@@ -6,7 +8,7 @@ import pyspeckit
 import pylab
 import matplotlib.pyplot as plt
 from astropy.io import fits
-import sys
+
 
 def read_fits(filename):
     """Read FITS file and return data, header, galaxy name and wavelengths"""
@@ -37,18 +39,23 @@ def get_wave_values(wavelengths):
     wave_values = wavelengths.value # Just the numbers, in microns
     return wave_values
 
-def main():
+def main(fits_file, file_options={}): 
     '''
-    This function reads the given fits file and converts the datafrom angstroms to microns.
+    This function reads the given fits file and converts the data from angstroms to microns.
 
     Input: directory/to/fitsfile.fits
-    Output: Simple plot of flux vs wavelength. Interactive mode can be entered by pressing 'b' for baseline,
-    and following command prompt. Press 'f' for line fitting, this must be done AFTER baseline, follow command prompt.
-    File and information must be saved manually at this time.
+    Output: Simple plot of flux vs wavelength. 
+    Interactive mode can be entered by pressing 'b' for baseline, and following the command prompt.
+    ('1' around basline area, '3' to plot baseline) 
+    Press 'f' for line fitting, this must be done AFTER baseline, follow command prompt.
+    ('1'at each end of line, '2' at peak then at FWHM, '3' to fit)
+    Information must be saved manually at this time, although images are saved automatically.
 
-    Flux: assigned unit of erg/s/cm^2/Angstrom
+    Flux: assigned unit of 10E-16 erg/s/cm^2/Angstrom
     Wavelength: Input should be in angstroms, converts angstroms to microns, plots in microns
     '''
+    print(file_options)
+
     reference_wavelengths = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
                    ['OI',11287],#*
                    ['[OII] 7319',7319.0],
@@ -77,17 +84,16 @@ def main():
                    [r'Pa$\epsilon$',9545],#9546.2
                    ['NaI',22080]]
 
-    data, header, gal_name, wavelengths = read_fits(sys.argv[1])
+    data, header, gal_name, wavelengths = read_fits(fits_file)
     # Giving units to flux
     flux_values = get_flux_values(data)
-
     #Giving units to wavelength and converting to microns
     wave_values = get_wave_values(wavelengths)
 
     # Create whole spectreum
     spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values, header=header, unit='erg/s/cm^2/AA')
 
-
+    #Get plotting range
     x_min = wave_values[0] - .01
     x_max = wave_values[-1] + .01
     #Look at last fifth of spectrum, excluding last 50 elements, and gets min flux value for whole spectrum plot
@@ -97,9 +103,7 @@ def main():
     fourth = np.floor(len(wave_values)*.25) 
     y_max = np.max(flux_values[0:fourth]) + .2
 
-    # Plot whole spectrum 
-    # Enter baseline fitter by pressing 'b', '1' around basline area, '3' to plot baseline
-    # Enter line fit by pressing 'f', '1'at each end of line, '2' at peak then at FWHM, '3' to fit
+    # Plot each reference wavelength, one at a time.
     for line in range(0,len(reference_wavelengths)):
       line_name = reference_wavelengths[line][0]
       line_value = reference_wavelengths[line][1]*u.AA
@@ -112,15 +116,24 @@ def main():
       #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
       if (line_value > x_min) & (line_value < x_max): # Plotting my lines on the graph
         new_spec = spec.copy()
-        new_spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) 
+        plot_type = file_options.get('plot', 'automatic')
+        
+        if plot_type == 'whole':
+          new_spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max) 
+        else:        
+          new_spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) 
+        
         plt.axvline(line_value,color='b',linestyle='--')
         lbl_pos = (y_max-y_min)*0.85 # at 85% up plot
         plt.text(line_value,lbl_pos,line_name,rotation=45) 
-        plt.axvline(line_value,color='b',linestyle='--')
-        plt.text(line_value,lbl_pos,line_name,rotation=45)
+        # plt.axvline(line_value,color='b',linestyle='--')
+        # plt.text(line_value,lbl_pos,line_name,rotation=45)
         pylab.show()
         #saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
         plt.savefig('../Images/' + gal_name + '_' + line_name + '.eps', format='eps', dpi=1200) 
 
 if __name__ == '__main__':
-    main()
+    fits_file = sys.argv[1]
+    file_options = {options.split('=')[0]:options.split('=')[0] for options in sys.argv[2:]}
+    if os.path.exists(fits_file):
+      main(fits_file,file_options)
