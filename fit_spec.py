@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+
 import sys
 import os
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.wcs import WCS
@@ -39,9 +42,10 @@ def get_wave_values(wavelengths):
     wave_values = wavelengths.value # Just the numbers, in microns
     return wave_values
 
-def main(fits_file, file_options={}): 
+def main(): 
     '''
-    This function reads the given fits file and converts the data from angstroms to microns.
+    This function parses command line arguments, reads the given fits file 
+    and converts the data from angstroms to microns.
 
     Input: directory/to/fitsfile.fits
     Output: Simple plot of flux vs wavelength. 
@@ -54,9 +58,22 @@ def main(fits_file, file_options={}):
     Flux: assigned unit of 10E-16 erg/s/cm^2/Angstrom
     Wavelength: Input should be in angstroms, converts angstroms to microns, plots in microns
     '''
-    print(file_options)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('fits_file')
+    parser.add_argument('--debug', '-d', action='store_true')
+    parser.add_argument('--prefix', '-p', 
+            help="Will be prepended to each .eps file written")
+    args = parser.parse_args()
+    fits_file = args.fits_file
+    file_options = {options.split('=')[0]:options.split('=')[0] for options in sys.argv[2:]}
+    if not os.path.exists(fits_file):
+        sys.stderr.write("Couldn't find %s. Exiting...\n".format(fits_file))
+        sys.exit()
 
-    reference_wavelengths = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
+    if args.debug:
+        reference_wavelengths = [['SiI',15880]]
+    else:
+        reference_wavelengths = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
                    ['OI',11287],#*
                    ['[OII] 7319',7319.0],
                    ['[SII] 6718',6718.95],
@@ -130,10 +147,14 @@ def main(fits_file, file_options={}):
         # plt.text(line_value,lbl_pos,line_name,rotation=45)
         pylab.show()
         #saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
-        plt.savefig('../Images/' + gal_name + '_' + line_name + '.eps', format='eps', dpi=1200) 
+        if args.prefix:
+            output_filename = args.prefix
+        else:
+            output_filename = "../Images/"
+        output_filename += gal_name + '_' + line_name + '.eps'
+        plt.savefig(output_filename, format='eps', dpi=1200) 
+
+##########################
 
 if __name__ == '__main__':
-    fits_file = sys.argv[1]
-    file_options = {options.split('=')[0]:options.split('=')[0] for options in sys.argv[2:]}
-    if os.path.exists(fits_file):
-      main(fits_file,file_options)
+    main()
