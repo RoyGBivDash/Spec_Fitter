@@ -68,9 +68,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('fits_file')
     parser.add_argument('--debug', '-d', action='store_true')
-    parser.add_argument('--prefix', '-p',
+    parser.add_argument('--directory', '--dir', default='../Images/',
                         help="Will be prepended to each .eps file written")
-    parser.add_argument('--plot_type', '-t',
+    parser.add_argument('--plot_type', '-t', default='lines',
                         help="Plots entire galaxy spectrum")
 
     args = parser.parse_args()
@@ -126,13 +126,21 @@ def main():
     x_max = wave_values[-1] + .01
     ''' Look at last fifth of spectrum, excluding last 50 elements
              and gets min flux value for whole spectrum plot'''
-    fifth = np.floor(len(wave_values)*.2)
+    fifth = np.floor(len(wave_values) * .2)
     y_min = np.min(flux_values[-fifth:-50]) - .1
     ''' Look at first fourth of spectrum
             and get max flux value for whole spectrum plot'''
     fourth = np.floor(len(wave_values) * .25)
     y_max = np.max(flux_values[0:fourth]) + .2
 
+    
+    if args.plot_type == 'whole':
+        new_spec = spec.copy()
+        new_spec.plotter(
+            xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
+    elif args.plot_type == 'none':
+        print('You have chosen not to plot or fit anything.')
+        sys.exit(0)
     # Plot each reference wavelength, one at a time.
     for line in range(0, len(reference_wavelengths)):
         line_name = reference_wavelengths[line][0]
@@ -143,38 +151,27 @@ def main():
         base_max = line_value + .03
         line_min = line_value - .01
         line_max = line_value + .01
-        # peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
+        # Not working, not sure why, looks the same as above
+        # peak_guess = np.max(flux_values[line_min:line_max]) 
         # fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
         # Plotting my lines on the graph
         if (line_value > x_min) & (line_value < x_max):
-            new_spec = spec.copy()
-
-    if args.plot_type == 'whole':
-        spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
-
-        for line in range(0, len(reference_wavelengths)):
-            line_name = reference_wavelengths[line][0]
-            line_value = reference_wavelengths[line][1] * u.AAq
-            # Converting reference_wavelengths units to microns
-            line_value = line_value.to(u.micron).value
-
-            if (line_value > x_min) & (line_value < x_max):
-                # Plotting my lines on the graph
-                plt.axvline(line_value, color='b', linestyle='--')
-                lbl_pos = (y_max - y_min) * 0.85  # at 85% up plot
-                plt.text(line_value, lbl_pos, line_name, rotation=45)
-
-        pylab.show()
-        plt.savefig('../Images/' + gal_name + '.jpeg', format='jpeg', dpi=300)
-
-    elif args.plot_type == 'none':
-        print('You have chosen not to plot or fit anything.')
-        sys.exit(0)
-
-    else:
-        output_filename = "../Images/"
-        output_filename += gal_name + '_' + line_name + '.jpeg'
-        plt.savefig(output_filename, format='jpeg', dpi=300)
+            if args.plot_type == 'lines':
+                new_spec = spec.copy()
+                new_spec.plotter(
+                    xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max)
+            plt.axvline(line_value, color='b', linestyle='--')
+            lbl_pos = (y_max - y_min) * 0.85  # at 85% up plot
+            plt.text(line_value, lbl_pos, line_name, rotation=45)
+            # If plotting lines, show plot and then save.
+            if args.plot_type == 'lines':
+                plt.show()
+                output_filename = args.directory
+                output_filename += gal_name + '_' + line_name + '.jpeg'
+                plt.savefig(output_filename, format='jpeg', dpi=300)
+    plt.show()
+    output_filename = args.directory + gal_name + '.jpeg'
+    plt.savefig(output_filename, format='jpeg', dpi=300)
 
 ##########################
 
