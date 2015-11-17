@@ -70,9 +70,8 @@ def main():
     parser.add_argument('--debug', '-d', action='store_true')
     parser.add_argument('--prefix', '-p',
                         help="Will be prepended to each .eps file written")
-    parser.add_argument('--wholeplot', '-w',
+    parser.add_argument('--plot_type', '-t',
                         help="Plots entire galaxy spectrum")
-    parser.add_argument('--noplot', '-n', help = 'Plots nothing')
 
     args = parser.parse_args()
     fits_file = args.fits_file
@@ -149,15 +148,13 @@ def main():
         # Plotting my lines on the graph
         if (line_value > x_min) & (line_value < x_max):
             new_spec = spec.copy()
-            # If plot is found assign variable as is, else be automatic
-            plot_type = file_options.get('plot_type', 'automatic')
 
-    if args.wholeplot:
+    if args.plot_type == 'whole':
         spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
 
         for line in range(0, len(reference_wavelengths)):
             line_name = reference_wavelengths[line][0]
-            line_value = reference_wavelengths[line][1] * u.AA
+            line_value = reference_wavelengths[line][1] * u.AAq
             # Converting reference_wavelengths units to microns
             line_value = line_value.to(u.micron).value
 
@@ -168,16 +165,16 @@ def main():
                 plt.text(line_value, lbl_pos, line_name, rotation=45)
 
         pylab.show()
-        plt.savefig('../Images/' + gal_name + '.eps', format='eps', dpi=1200)
+        plt.savefig('../Images/' + gal_name + '.jpeg', format='jpeg', dpi=300)
 
-    elif args.noplot:
+    elif args.plot_type == 'none':
         print('You have chosen not to plot or fit anything.')
         sys.exit(0)
 
     else:
         output_filename = "../Images/"
-        output_filename += gal_name + '_' + line_name + '.eps'
-        plt.savefig(output_filename, format='eps', dpi=1200)
+        output_filename += gal_name + '_' + line_name + '.jpeg'
+        plt.savefig(output_filename, format='jpeg', dpi=300)
 
 ##########################
 
