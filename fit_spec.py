@@ -9,7 +9,6 @@ from astropy.wcs import WCS
 from astropy import units as u
 import pyspeckit
 import pylab
-import matplotlib.pyplot as plt
 from astropy.io import fits
 
 
@@ -22,11 +21,12 @@ def read_fits(filename):
     gal_name = header['OBJECT']
     wcs = WCS(header)
     index = np.arange(header['NAXIS1'])  # Make index array
-    wavelengths = wcs.wcs_pix2world(index[:,np.newaxis], 0)
+    wavelengths = wcs.wcs_pix2world(index[:, np.newaxis], 0)
     # Makes sure the wavelength has correct dimensions:
     wavelengths = wavelengths.flatten()
     hdulist.close()
     return data, header, gal_name, wavelengths
+
 
 def get_flux_values(data):
     """Extract flux values from FITS data; return unitless values"""
@@ -34,6 +34,7 @@ def get_flux_values(data):
     flux = data * flux_unit * 1e16  # Need larger numbers for pyspeckit
     flux_values = flux.value  # Just the numbers
     return flux_values
+
 
 def get_wave_values(wavelengths):
     """Convert wavelength units to microns, return values only"""
@@ -43,21 +44,26 @@ def get_wave_values(wavelengths):
     wave_values = wavelengths.value  # Just the numbers, in microns
     return wave_values
 
+
 def main():
     '''
-    This function parses command line arguments, reads the given fits file 
+    This function parses command line arguments, reads the given fits file
     and converts the data from angstroms to microns.
 
     Input: directory/to/fitsfile.fits
-    Output: Simple plot of flux vs wavelength. 
-    Interactive mode can be entered by pressing 'b' for baseline, and following the command prompt.
-    ('1' around basline area, '3' to plot baseline) 
-    Press 'f' for line fitting, this must be done AFTER baseline, follow command prompt.
+    Output: Simple plot of flux vs wavelength.
+    Interactive mode can be entered by pressing 'b' for baseline 
+    and following the command prompt.
+    ('1' around basline area, '3' to plot baseline)
+    Press 'f' for line fitting, this must be done AFTER baseline 
+    and follow command prompt.
     ('1'at each end of line, '2' at peak then at FWHM, '3' to fit)
-    Information must be saved manually at this time, although images are saved automatically.
+    Information must be saved manually at this time,
+    although images are saved automatically.
 
     Flux: assigned unit of 10E-16 erg/s/cm^2/Angstrom
-    Wavelength: Input should be in angstroms, converts angstroms to microns, plots in microns
+    Wavelength: Input should be in angstroms, converts angstroms to microns,
+    plots in microns
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('fits_file')
@@ -66,10 +72,11 @@ def main():
                         help="Will be prepended to each .eps file written")
     parser.add_argument('--wholeplot', '-w',
                         help="Plots entire galaxy spectrum")
+    parser.add_argument('--noplot', '-n', help = 'Plots nothing')
 
     args = parser.parse_args()
     fits_file = args.fits_file
-    file_options = {options.split('=')[0]:options.split('=')[0] for options in sys.argv[2:]}
+
     if not os.path.exists(fits_file):
         sys.stderr.write("Couldn't find %s. Exiting...\n".format(fits_file))
         sys.exit()
@@ -119,7 +126,7 @@ def main():
     x_min = wave_values[0] - .01
     x_max = wave_values[-1] + .01
     ''' Look at last fifth of spectrum, excluding last 50 elements
-                and gets min flux value for whole spectrum plot'''
+             and gets min flux value for whole spectrum plot'''
     fifth = np.floor(len(wave_values)*.2)
     y_min = np.min(flux_values[-fifth:-50]) - .1
     ''' Look at first fourth of spectrum
@@ -137,15 +144,15 @@ def main():
         base_max = line_value + .03
         line_min = line_value - .01
         line_max = line_value + .01
-        #peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
-        #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
+        # peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
+        # fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
         # Plotting my lines on the graph
         if (line_value > x_min) & (line_value < x_max):
             new_spec = spec.copy()
             # If plot is found assign variable as is, else be automatic
             plot_type = file_options.get('plot_type', 'automatic')
 
-    if plot_type == 'whole':
+    if args.wholeplot:
         spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
 
         for line in range(0, len(reference_wavelengths)):
@@ -163,7 +170,7 @@ def main():
         pylab.show()
         plt.savefig('../Images/' + gal_name + '.eps', format='eps', dpi=1200)
 
-    elif plot_type == 'none':
+    elif args.noplot:
         print('You have chosen not to plot or fit anything.')
         sys.exit(0)
 
@@ -176,10 +183,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # The first argument from the command line is the name of the fits file
-    fits_file = sys.argv[1]
-    # Every other argument after fits file is an option.
-    file_options = {options.split('=')[0]: options.split('=')[1] for options in sys.argv[2:]}
-    # If the file exists, then run the main program, with options if available.
-    if os.path.exists(fits_file):
-        main(fits_file, file_options)
+    main()
