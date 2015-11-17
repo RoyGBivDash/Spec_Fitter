@@ -15,34 +15,35 @@ from astropy.io import fits
 
 def read_fits(filename):
     """Read FITS file and return data, header, galaxy name and wavelengths"""
-    hdulist = fits.open(filename) # Opens fits file
-    data = hdulist[0].data # This is the flux
+    hdulist = fits.open(filename)  # Opens fits file
+    data = hdulist[0].data  # This is the flux
     # Following lines look at header and extract the wavelength information
     header = hdulist[0].header
     gal_name = header['OBJECT']
     wcs = WCS(header)
-    index = np.arange(header['NAXIS1']) # Make index array
+    index = np.arange(header['NAXIS1'])  # Make index array
     wavelengths = wcs.wcs_pix2world(index[:,np.newaxis], 0)
-    wavelengths = wavelengths.flatten() # Makes sure the wavelength has correct dimensions
+    # Makes sure the wavelength has correct dimensions:
+    wavelengths = wavelengths.flatten()
     hdulist.close()
     return data, header, gal_name, wavelengths
 
 def get_flux_values(data):
     """Extract flux values from FITS data; return unitless values"""
     flux_unit = u.erg / (u.cm**2 * u.s * u.AA)
-    flux = data * flux_unit * 1e16 # Need larger numbers for pyspeckit.Spectrum to be able to read
-    flux_values = flux.value # Just the numbers
+    flux = data * flux_unit * 1e16  # Need larger numbers for pyspeckit
+    flux_values = flux.value  # Just the numbers
     return flux_values
 
 def get_wave_values(wavelengths):
     """Convert wavelength units to microns, return values only"""
     wv_unit = u.AA
     wavelengths = wavelengths * wv_unit
-    wavelengths = wavelengths.to(u.micron) # Converting Angstrom to microns
-    wave_values = wavelengths.value # Just the numbers, in microns
+    wavelengths = wavelengths.to(u.micron)  # Converting Angstrom to microns
+    wave_values = wavelengths.value  # Just the numbers, in microns
     return wave_values
 
-def main(): 
+def main():
     '''
     This function parses command line arguments, reads the given fits file 
     and converts the data from angstroms to microns.
@@ -61,8 +62,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('fits_file')
     parser.add_argument('--debug', '-d', action='store_true')
-    parser.add_argument('--prefix', '-p', 
-            help="Will be prepended to each .eps file written")
+    parser.add_argument('--prefix', '-p',
+                        help="Will be prepended to each .eps file written")
+    parser.add_argument('--wholeplot', '-w',
+                        help="Plots entire galaxy spectrum")
+
     args = parser.parse_args()
     fits_file = args.fits_file
     file_options = {options.split('=')[0]:options.split('=')[0] for options in sys.argv[2:]}
@@ -71,90 +75,111 @@ def main():
         sys.exit()
 
     if args.debug:
-        reference_wavelengths = [['SiI',15880]]
+        # Wavelengths are in angstroms
+        reference_wavelengths = [['SiI', 15880]]
     else:
-        reference_wavelengths = [['[ArIII] 7136',7136.97], #wavelengths are in angstroms
-                   ['OI',11287],#*
-                   ['[OII] 7319',7319.0],
-                   ['[SII] 6718',6718.95],
-                   ['[SIII]',9069],#*
-                   ['SiI',15880],
-                   ['CaI',22630],
-                   ['MgI 15750',15750],
-                   ['MgI 17110',17110],
-                   ['HeI 10830',10830],#*
-                   ['HeI 20520',20520],#*
-                   ['HeII 8239',8239.26],
-                   ['HeII 20580',20580],
-                   ['CaII 8544',8544.44],
-                   ['CaII 8498',8498],
-                   ['CaII 8662',8662],
-                   ['[FeII] 9202',9202],#*
-                   ['[FeII]12600',12600],
-                   ['[FeII]16440',16440],
-                   ['H$_{2}$ 19570',19570],
-                   ['H$_{2}$ 21210',21210],
-                   [r'Pa$_{\alpha}$',18750.1],
-                   [r'Pa$_{\beta}$',12818.1],
-                   [r'Pa$_{\gamma}$',10938],
-                   [r'Pa$\delta$',10049.8],
-                   [r'Pa$\epsilon$',9545],#9546.2
-                   ['NaI',22080]]
+        reference_wavelengths = [['[ArIII] 7136', 7136.97],
+                                 ['OI', 11287],  #
+                                 ['[OII] 7319', 7319.0],
+                                 ['[SII] 6718', 6718.95],
+                                 ['[SIII]', 9069],  #
+                                 ['SiI', 15880],
+                                 ['CaI', 22630],
+                                 ['MgI 15750', 15750],
+                                 ['MgI 17110', 17110],
+                                 ['HeI 10830', 10830],  #
+                                 ['HeI 20520', 20520],  #
+                                 ['HeII 8239', 8239.26],
+                                 ['HeII 20580', 20580],
+                                 ['CaII 8544', 8544.44],
+                                 ['CaII 8498', 8498],
+                                 ['CaII 8662', 8662],
+                                 ['[FeII] 9202', 9202],  #
+                                 ['[FeII]12600', 12600],
+                                 ['[FeII]16440', 16440],
+                                 ['H$_{2}$ 19570', 19570],
+                                 ['H$_{2}$ 21210', 21210],
+                                 [r'Pa$_{\alpha}$', 18750.1],
+                                 [r'Pa$_{\beta}$', 12818.1],
+                                 [r'Pa$_{\gamma}$', 10938],
+                                 [r'Pa$\delta$', 10049.8],
+                                 [r'Pa$\epsilon$', 9545],  # 9546.2
+                                 ['NaI', 22080]]
 
     data, header, gal_name, wavelengths = read_fits(fits_file)
     # Giving units to flux
     flux_values = get_flux_values(data)
-    #Giving units to wavelength and converting to microns
+    # Giving units to wavelength and converting to microns
     wave_values = get_wave_values(wavelengths)
 
     # Create whole spectreum
-    spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values, header=header, unit='erg/s/cm^2/AA')
-
-    #Get plotting range
+    spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values,
+                              header=header, unit='erg/s/cm^2/AA')
+    # Get plotting range
     x_min = wave_values[0] - .01
     x_max = wave_values[-1] + .01
-    #Look at last fifth of spectrum, excluding last 50 elements, and gets min flux value for whole spectrum plot
+    ''' Look at last fifth of spectrum, excluding last 50 elements
+                and gets min flux value for whole spectrum plot'''
     fifth = np.floor(len(wave_values)*.2)
     y_min = np.min(flux_values[-fifth:-50]) - .1
-    #Look at first fourth of spectrum and gets max flux value for whole spectrum plot
-    fourth = np.floor(len(wave_values)*.25) 
+    ''' Look at first fourth of spectrum
+            and get max flux value for whole spectrum plot'''
+    fourth = np.floor(len(wave_values) * .25)
     y_max = np.max(flux_values[0:fourth]) + .2
 
     # Plot each reference wavelength, one at a time.
-    for line in range(0,len(reference_wavelengths)):
-      line_name = reference_wavelengths[line][0]
-      line_value = reference_wavelengths[line][1]*u.AA
-      line_value = line_value.to(u.micron).value #Converting reference_wavelengths units to microns
-      base_min = line_value-.03
-      base_max = line_value+.03
-      line_min = line_value-.01
-      line_max = line_value+.01
-      #peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
-      #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
-      if (line_value > x_min) & (line_value < x_max): # Plotting my lines on the graph
-        new_spec = spec.copy()
-        plot_type = file_options.get('plot', 'automatic')
-        
-        if plot_type == 'whole':
-          new_spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max) 
-        else:        
-          new_spec.plotter(xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max) 
-        
-        plt.axvline(line_value,color='b',linestyle='--')
-        lbl_pos = (y_max-y_min)*0.85 # at 85% up plot
-        plt.text(line_value,lbl_pos,line_name,rotation=45) 
-        # plt.axvline(line_value,color='b',linestyle='--')
-        # plt.text(line_value,lbl_pos,line_name,rotation=45)
+    for line in range(0, len(reference_wavelengths)):
+        line_name = reference_wavelengths[line][0]
+        line_value = reference_wavelengths[line][1] * u.AA
+        # Converting reference_wavelengths units to microns
+        line_value = line_value.to(u.micron).value
+        base_min = line_value - .03
+        base_max = line_value + .03
+        line_min = line_value - .01
+        line_max = line_value + .01
+        #peak_guess = np.max(flux_values[line_min:line_max]) #Not working, not sure why, looks the same as above
+        #fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
+        # Plotting my lines on the graph
+        if (line_value > x_min) & (line_value < x_max):
+            new_spec = spec.copy()
+            # If plot is found assign variable as is, else be automatic
+            plot_type = file_options.get('plot_type', 'automatic')
+
+    if plot_type == 'whole':
+        spec.plotter(xmin=x_min, xmax=x_max, ymin=y_min, ymax=y_max)
+
+        for line in range(0, len(reference_wavelengths)):
+            line_name = reference_wavelengths[line][0]
+            line_value = reference_wavelengths[line][1] * u.AA
+            # Converting reference_wavelengths units to microns
+            line_value = line_value.to(u.micron).value
+
+            if (line_value > x_min) & (line_value < x_max):
+                # Plotting my lines on the graph
+                plt.axvline(line_value, color='b', linestyle='--')
+                lbl_pos = (y_max - y_min) * 0.85  # at 85% up plot
+                plt.text(line_value, lbl_pos, line_name, rotation=45)
+
         pylab.show()
-        #saves figure as a .eps file using the galaxy name from the header, manually created Images dir.
-        if args.prefix:
-            output_filename = args.prefix
-        else:
-            output_filename = "../Images/"
+        plt.savefig('../Images/' + gal_name + '.eps', format='eps', dpi=1200)
+
+    elif plot_type == 'none':
+        print('You have chosen not to plot or fit anything.')
+        sys.exit(0)
+
+    else:
+        output_filename = "../Images/"
         output_filename += gal_name + '_' + line_name + '.eps'
-        plt.savefig(output_filename, format='eps', dpi=1200) 
+        plt.savefig(output_filename, format='eps', dpi=1200)
 
 ##########################
 
+
 if __name__ == '__main__':
-    main()
+    # The first argument from the command line is the name of the fits file
+    fits_file = sys.argv[1]
+    # Every other argument after fits file is an option.
+    file_options = {options.split('=')[0]: options.split('=')[1] for options in sys.argv[2:]}
+    # If the file exists, then run the main program, with options if available.
+    if os.path.exists(fits_file):
+        main(fits_file, file_options)
