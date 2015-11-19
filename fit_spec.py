@@ -10,6 +10,7 @@ from astropy import units as u
 import pyspeckit
 import pylab
 from astropy.io import fits
+from astropy.modeling import models, fitting
 
 
 def read_fits(filename):
@@ -133,7 +134,6 @@ def main():
     fourth = np.floor(len(wave_values) * .25)
     y_max = np.max(flux_values[0:fourth]) + .2
 
-    
     if args.plot_type == 'whole':
         new_spec = spec.copy()
         new_spec.plotter(
@@ -152,23 +152,43 @@ def main():
         line_min = line_value - .01
         line_max = line_value + .01
         # Not working, not sure why, looks the same as above
-        # peak_guess = np.max(flux_values[line_min:line_max]) 
         # fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
         # Plotting my lines on the graph
         if (line_value > x_min) & (line_value < x_max):
             if args.plot_type == 'lines':
-                new_spec = spec.copy()
-                new_spec.plotter(
-                    xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max)
-            plt.axvline(line_value, color='b', linestyle='--')
-            lbl_pos = (y_max - y_min) * 0.85  # at 85% up plot
-            plt.text(line_value, lbl_pos, line_name, rotation=45)
-            # If plotting lines, show plot and then save.
-            if args.plot_type == 'lines':
+                line_index = np.argwhere((wave_values>line_min) & (wave_values<line_max)).flatten()
+                flux_data = flux_values[line_index]
+                wave_data = wave_values[line_index]
+                x = wave_data
+                y = flux_data
+                peak = np.max(y) 
+                mean = np.mean(y)
+                std = np.std(y)
+                print(peak, line_value, std)
+                gg_init = models.Gaussian1D(peak, line_value, 0.001)  #+ models.Gaussian1D(peak, mean, std)
+                fitter = fitting.SLSQPLSQFitter()
+                gg_fit = fitter(gg_init, x, y)
+
+                # Plot the data with the best-fit model
+                plt.figure(figsize=(8,5))
+                plt.plot(x, y, 'ko')
+                plt.plot(x, gg_fit(x), 'r-', lw=2)
+                plt.xlabel('Position')
+                plt.ylabel('Flux')
+
+                # plt.axvline(line_value, color='b', linestyle='--')
+                # lbl_pos = (y_max - y_min) * 0.85  # at 85% up plot
+                # plt.text(line_value, lbl_pos, line_name, rotation=45)
                 plt.show()
-                output_filename = args.directory
-                output_filename += gal_name + '_' + line_name + '.jpeg'
-                plt.savefig(output_filename, format='jpeg', dpi=300)
+            #     new_spec = spec.copy()
+            #     new_spec.plotter(
+            #         xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max)
+            # If plotting lines, show plot and then save.
+            # if args.plot_type == 'lines':
+            #     plt.show()
+            #     output_filename = args.directory
+            #     output_filename += gal_name + '_' + line_name + '.jpeg'
+            #     plt.savefig(output_filename, format='jpeg', dpi=300)
     plt.show()
     output_filename = args.directory + gal_name + '.jpeg'
     plt.savefig(output_filename, format='jpeg', dpi=300)
