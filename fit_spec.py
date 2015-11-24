@@ -52,10 +52,10 @@ def main():
 
     Input: directory/to/fitsfile.fits
     Output: Simple plot of flux vs wavelength.
-    Interactive mode can be entered by pressing 'b' for baseline 
+    Interactive mode can be entered by pressing 'b' for baseline
     and following the command prompt.
     ('1' around basline area, '3' to plot baseline)
-    Press 'f' for line fitting, this must be done AFTER baseline 
+    Press 'f' for line fitting, this must be done AFTER baseline
     and follow command prompt.
     ('1'at each end of line, '2' at peak then at FWHM, '3' to fit)
     Information must be saved manually at this time,
@@ -133,7 +133,6 @@ def main():
     fourth = np.floor(len(wave_values) * .25)
     y_max = np.max(flux_values[0:fourth]) + .2
 
-    
     if args.plot_type == 'whole':
         new_spec = spec.copy()
         new_spec.plotter(
@@ -142,9 +141,9 @@ def main():
         print('You have chosen not to plot or fit anything.')
         sys.exit(0)
     # Plot each reference wavelength, one at a time.
-    for line in range(0, len(reference_wavelengths)):
-        line_name = reference_wavelengths[line][0]
-        line_value = reference_wavelengths[line][1] * u.AA
+    for line in reference_wavelengths:
+        line_name = line[0]
+        line_value = line[1] * u.AA
         # Converting reference_wavelengths units to microns
         line_value = line_value.to(u.micron).value
         base_min = line_value - .03
