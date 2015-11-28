@@ -5,44 +5,9 @@ import os
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from astropy.wcs import WCS
 from astropy import units as u
 import pyspeckit
-import pylab
-from astropy.io import fits
-
-
-def read_fits(filename):
-    """Read FITS file and return data, header, galaxy name and wavelengths"""
-    hdulist = fits.open(filename)  # Opens fits file
-    data = hdulist[0].data  # This is the flux
-    # Following lines look at header and extract the wavelength information
-    header = hdulist[0].header
-    gal_name = header['OBJECT']
-    wcs = WCS(header)
-    index = np.arange(header['NAXIS1'])  # Make index array
-    wavelengths = wcs.wcs_pix2world(index[:, np.newaxis], 0)
-    # Makes sure the wavelength has correct dimensions:
-    wavelengths = wavelengths.flatten()
-    hdulist.close()
-    return data, header, gal_name, wavelengths
-
-
-def get_flux_values(data):
-    """Extract flux values from FITS data; return unitless values"""
-    flux_unit = u.erg / (u.cm**2 * u.s * u.AA)
-    flux = data * flux_unit * 1e16  # Need larger numbers for pyspeckit
-    flux_values = flux.value  # Just the numbers
-    return flux_values
-
-
-def get_wave_values(wavelengths):
-    """Convert wavelength units to microns, return values only"""
-    wv_unit = u.AA
-    wavelengths = wavelengths * wv_unit
-    wavelengths = wavelengths.to(u.micron)  # Converting Angstrom to microns
-    wave_values = wavelengths.value  # Just the numbers, in microns
-    return wave_values
+import specinfo
 
 
 def main():
@@ -80,6 +45,8 @@ def main():
         sys.stderr.write("Couldn't find %s. Exiting...\n".format(fits_file))
         sys.exit()
 
+    spec_info = specinfo.SpecInfo(fits_file)
+
     if args.debug:
         # Wavelengths are in angstroms
         reference_wavelengths = [['SiI', 15880]]
@@ -112,15 +79,12 @@ def main():
                                  [r'Pa$\epsilon$', 9545],  # 9546.2
                                  ['NaI', 22080]]
 
-    data, header, gal_name, wavelengths = read_fits(fits_file)
-    # Giving units to flux
-    flux_values = get_flux_values(data)
-    # Giving units to wavelength and converting to microns
-    wave_values = get_wave_values(wavelengths)
+    flux_values = spec_info.get_flux_values()
+    wave_values = spec_info.get_wave_values()
 
     # Create whole spectreum
     spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values,
-                              header=header, unit='erg/s/cm^2/AA')
+                              header=spec_info.header, unit='erg/s/cm^2/AA')
     # Get plotting range
     x_min = wave_values[0] - .01
     x_max = wave_values[-1] + .01
@@ -166,10 +130,10 @@ def main():
             if args.plot_type == 'lines':
                 plt.show()
                 output_filename = args.directory
-                output_filename += gal_name + '_' + line_name + '.jpeg'
+                output_filename += spec_info.gal_name + '_' + line_name + '.jpeg'
                 plt.savefig(output_filename, format='jpeg', dpi=300)
     plt.show()
-    output_filename = args.directory + gal_name + '.jpeg'
+    output_filename = args.directory + spec_info.gal_name + '.jpeg'
     plt.savefig(output_filename, format='jpeg', dpi=300)
 
 ##########################
