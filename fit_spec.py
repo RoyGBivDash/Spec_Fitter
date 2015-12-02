@@ -46,6 +46,8 @@ def main():
         sys.exit()
 
     spec_info = specinfo.SpecInfo(fits_file)
+    flux_values = spec_info.get_flux_values()
+    wave_values = spec_info.get_wave_values()
 
     if args.debug:
         # Wavelengths are in angstroms
@@ -79,9 +81,6 @@ def main():
                                  [r'Pa$\epsilon$', 9545],  # 9546.2
                                  ['NaI', 22080]]
 
-    flux_values = spec_info.get_flux_values()
-    wave_values = spec_info.get_wave_values()
-
     # Create whole spectreum
     spec = pyspeckit.Spectrum(data=flux_values, xarr=wave_values,
                               header=spec_info.header, unit='erg/s/cm^2/AA')
@@ -104,6 +103,7 @@ def main():
     elif args.plot_type == 'none':
         print('You have chosen not to plot or fit anything.')
         sys.exit(0)
+
     # Plot each reference wavelength, one at a time.
     for line in reference_wavelengths:
         line_name = line[0]
@@ -114,10 +114,10 @@ def main():
         base_max = line_value + .03
         line_min = line_value - .01
         line_max = line_value + .01
-        # Not working, not sure why, looks the same as above
-        # peak_guess = np.max(flux_values[line_min:line_max]) 
-        # fwhm_guess = .5 * peak_guess #Need corresponding x value to this calculation
-        # Plotting my lines on the graph
+        # peak_guess = spec_info.find_max_y_in_x_range(wave_values, flux_values, base_min, base_max)
+        # print("peak: ", peak_guess)
+        # print("line value: ", line_value)
+        # # Plotting my lines on the graph
         if (line_value > x_min) & (line_value < x_max):
             if args.plot_type == 'lines':
                 new_spec = spec.copy()
