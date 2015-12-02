@@ -16,9 +16,9 @@ class SpecInfo(object):
         self.gal_name = gal_name
         self.wavelengths = wavelengths
 
-        
     def read_fits(self):
-        """Read FITS file and return data, header, galaxy name and wavelengths"""
+        """Read FITS file and 
+            returns data, header, galaxy name and wavelengths"""
         hdulist = fits.open(self.filename)  # Opens fits file
         data = hdulist[0].data  # This is the flux
         # Following lines look at header and extract the wavelength information
@@ -46,6 +46,18 @@ class SpecInfo(object):
         """Convert wavelength units to microns, return values only"""
         wv_unit = u.AA
         wavelengths = self.wavelengths * wv_unit
-        wavelengths = wavelengths.to(u.micron)  #Converting Angstrom to microns
+        # Converting Angstrom to microns
+        wavelengths = wavelengths.to(u.micron)
         wave_values = wavelengths.value  # Just the numbers, in microns
         return wave_values
+
+    def find_max_y_in_x_range(self, x_list, y_list, x_min, x_max):
+        spec_line = x_list[x_min:x_max]  # Limits whole array to wanted range
+        max_y = None
+        loc_max_y = 0
+        for i in range(len(x_list)):
+            if x_list[i] >= x_min and x_list[i] <= x_max:
+                if max_y is None or y_list[i] > max_y:
+                    max_y = y_list[i]
+                    loc_max_y = x_list[i]
+        return max_y, loc_max_y
