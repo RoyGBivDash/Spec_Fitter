@@ -114,10 +114,13 @@ def main():
         base_max = line_value + .03
         line_min = line_value - .01
         line_max = line_value + .01
-        # peak_guess = spec_info.find_max_y_in_x_range(wave_values, flux_values, base_min, base_max)
-        # print("peak: ", peak_guess)
-        # print("line value: ", line_value)
-        # # Plotting my lines on the graph
+        peak_guess, peak_location = spec_info.find_max_y_in_x_range(
+            wave_values, flux_values, line_min, line_max)
+        print(line_name)
+        print("peak: ", peak_guess)
+        print("peak location: ", peak_location)
+        print("line value: ", line_value)
+        # Plotting my lines on the graph
         if (line_value > x_min) & (line_value < x_max):
             if args.plot_type == 'lines':
                 new_spec = spec.copy()
@@ -130,7 +133,8 @@ def main():
             if args.plot_type == 'lines':
                 plt.show()
                 output_filename = args.directory
-                output_filename += spec_info.gal_name + '_' + line_name + '.jpeg'
+                output_filename += spec_info.gal_name + \
+                    '_' + line_name + '.jpeg'
                 plt.savefig(output_filename, format='jpeg', dpi=300)
     plt.show()
     output_filename = args.directory + spec_info.gal_name + '.jpeg'
