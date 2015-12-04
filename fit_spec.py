@@ -126,6 +126,11 @@ def main():
                 new_spec = spec.copy()
                 new_spec.plotter(
                     xmin=base_min, xmax=base_max, ymin=y_min, ymax=y_max)
+                new_spec.baseline(order=1, exclude=(line_min, line_max), fit_plotted_area=True,)
+            #  , fit_original=True, fit_plotted_area=True,)
+            #  linewidth=2, baseline_fit_color='r'
+            #  highlight_fitregion=True, reset_selection=True,
+
             plt.axvline(line_value, color='b', linestyle='--')
             lbl_pos = (y_max - y_min) * 0.85  # at 85% up plot
             plt.text(line_value, lbl_pos, line_name, rotation=45)
